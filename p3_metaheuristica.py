@@ -36,21 +36,21 @@ def inicializar_matrices(datos, feromona_inicial):
     return matriz_heuristica, matriz_feromonas, matriz_distancias
 
 
-def calcular_sumatorio(fila_heuristica, fila_feromonas, tabu,alpha,beta):
+def calcular_sumatorio(fila_heuristica, fila_feromonas, tabu, alpha, beta):
     denominador = 0
     for cont, (heu, fer) in enumerate(zip(fila_heuristica, fila_feromonas)):
         if heu != np.inf and cont not in tabu:
-            denominador += (heu**beta) * (fer**alpha)
+            denominador += (heu ** beta) * (fer ** alpha)
     return denominador
 
 
-def calcular_fila_probabilidades(fila_heuristica, fila_feromonas, tabu,alpha,beta):
-    denominador = calcular_sumatorio(fila_heuristica, fila_feromonas, tabu,alpha,beta)
+def calcular_fila_probabilidades(fila_heuristica, fila_feromonas, tabu, alpha, beta):
+    denominador = calcular_sumatorio(fila_heuristica, fila_feromonas, tabu, alpha, beta)
     fila_probabilidad = []
     for cont, (heu, fer) in enumerate(zip(fila_heuristica, fila_feromonas)):  # comprobar que funciona el enumerate
         if heu != np.inf and cont not in tabu:
 
-            numerador = (heu**beta) * (fer**alpha)
+            numerador = (heu ** beta) * (fer ** alpha)
             fila_probabilidad.append((numerador / denominador))
         else:
             fila_probabilidad.append(-1)
@@ -58,8 +58,8 @@ def calcular_fila_probabilidades(fila_heuristica, fila_feromonas, tabu,alpha,bet
 
 
 def seleccion_ciudad(fila_probabilidades):
-    # valor = random.uniform(0.0, 1.0)
-    valor=0.673
+    valor = random.uniform(0.0, 1.0)
+    # valor=0.673
     acumulado = 0
     posicion = -5
     # print("len de la fila prob",len(fila_probabilidades))
@@ -67,8 +67,8 @@ def seleccion_ciudad(fila_probabilidades):
 
         if prob > 0:
             acumulado += prob
-            if pos==280:
-                print("la longitud cuando da fallo es ",len(fila_probabilidades)," ----- ",pos)
+            if pos == 280:
+                print("la longitud cuando da fallo es ", len(fila_probabilidades), " ----- ", pos)
             if acumulado > valor:
                 posicion = pos
                 fila_probabilidades[pos] = -1
@@ -104,38 +104,66 @@ def calcular_matriz_aporte(costes, f):
         aporte = 1 / c[0]
         camino = c[1]
         for i in range(0, f - 1):
-
             matriz_aporte[camino[i]][camino[i + 1]] += aporte
             matriz_aporte[camino[i + 1]][camino[i]] += aporte
-        matriz_aporte[camino[0]][camino[f-1]] += aporte
-        matriz_aporte[camino[f-1]][camino[0]] += aporte
+        matriz_aporte[camino[0]][camino[f - 1]] += aporte
+        matriz_aporte[camino[f - 1]][camino[0]] += aporte
     return matriz_aporte
 
-def greedy(matriz_distancias):
-    solicion_greedy=[]
-    f,c=matriz_distancias.shape
-    nodo_actual=0
-    minimo=1000
-    solicion_greedy.append(nodo_actual)
-    for i in range(1,f):
 
-        nodo_actual=mas_cercano(matriz_distancias[nodo_actual],solicion_greedy)
+def calcular_matriz_aporte_elitista(costes, f, mejor_camino, coste_mejor, e):
+    matriz_aporte = np.zeros((f, f))
+    for c in costes:
+        aporte = 1 / c[0]
+        camino = c[1]
+        for i in range(0, f - 1):
+            matriz_aporte[camino[i]][camino[i + 1]] += aporte
+            matriz_aporte[camino[i + 1]][camino[i]] += aporte
+        matriz_aporte[camino[0]][camino[f - 1]] += aporte
+        matriz_aporte[camino[f - 1]][camino[0]] += aporte
+    for i in range(0, f - 1):
+        matriz_aporte[mejor_camino[i]][mejor_camino[i + 1]] += e * 1 / coste_mejor
+        matriz_aporte[mejor_camino[i + 1]][mejor_camino[i]] += e * 1 / coste_mejor
+    matriz_aporte[mejor_camino[-1]][mejor_camino[0]] += e * 1 / coste_mejor
+    matriz_aporte[mejor_camino[0]][mejor_camino[-1]] += e * 1 / coste_mejor
+    return matriz_aporte
+
+
+def calcular_matriz_aporte_global(camino, aporte, f):
+    matriz_aporte = np.zeros((f, f))
+    for i in range(0, f - 1):
+        matriz_aporte[camino[i]][camino[i + 1]] += aporte
+        matriz_aporte[camino[i + 1]][camino[i]] += aporte
+    matriz_aporte[camino[0]][camino[f - 1]] += aporte
+    matriz_aporte[camino[f - 1]][camino[0]] += aporte
+    return matriz_aporte
+
+
+def greedy(matriz_distancias):
+    solicion_greedy = []
+    f, c = matriz_distancias.shape
+    nodo_actual = 0
+    minimo = 1000
+    solicion_greedy.append(nodo_actual)
+    for i in range(1, f):
+        nodo_actual = mas_cercano(matriz_distancias[nodo_actual], solicion_greedy)
         solicion_greedy.append(nodo_actual)
 
     return solicion_greedy
 
-def mas_cercano(fila_distancias,tabu):
-    minimo=1000000
 
-    for pos,valor in enumerate(fila_distancias):
+def mas_cercano(fila_distancias, tabu):
+    minimo = 1000000
+
+    for pos, valor in enumerate(fila_distancias):
         if valor != np.inf and pos not in tabu:
-            if valor<minimo:
-                minimo=valor
-                posicion=pos
+            if valor < minimo:
+                minimo = valor
+                posicion = pos
     return posicion
 
 
-def generar_solucion_hormiga(nodo_inicial, matriz_heuristica, matriz_feromonas, matriz_distancia,alpha,beta):
+def generar_solucion_hormiga(nodo_inicial, matriz_heuristica, matriz_feromonas, matriz_distancia, alpha, beta):
     nodo_inicial = int(nodo_inicial)
     tabu = []
     tabu.append(nodo_inicial)
@@ -143,13 +171,29 @@ def generar_solucion_hormiga(nodo_inicial, matriz_heuristica, matriz_feromonas, 
     f, c = matriz_heuristica.shape
     ciudad_actual = nodo_inicial
     max = int(f + nodo_inicial)
-    for x in range(len(matriz_heuristica)-1):
+    for x in range(len(matriz_heuristica) - 1):
         # i = i % f
-        fila_probabilidades = calcular_fila_probabilidades(matriz_heuristica[ciudad_actual],matriz_feromonas[ciudad_actual], tabu,alpha,beta)
+        fila_probabilidades = calcular_fila_probabilidades(matriz_heuristica[ciudad_actual], matriz_feromonas[ciudad_actual], tabu, alpha, beta)
         ciudad_actual = seleccion_ciudad(fila_probabilidades)
-        nuevo_tabu=ciudad_actual
+        nuevo_tabu = ciudad_actual
         tabu.append(nuevo_tabu)
     return tabu
+
+def generar_solucion_hormiga_colonia(nodo_inicial, matriz_heuristica, matriz_feromonas, matriz_distancia, alpha, beta):
+    nodo_inicial = int(nodo_inicial)
+    tabu = []
+    tabu.append(nodo_inicial)
+    # fila_heuristica, fila_feromonas, tabu):
+    f, c = matriz_heuristica.shape
+    ciudad_actual = nodo_inicial
+    max = int(f + nodo_inicial)
+    for x in range(len(matriz_heuristica) - 1):
+        # i = i % f
+        fila_probabilidades = calcular_fila_probabilidades(matriz_heuristica[ciudad_actual], matriz_feromonas[ciudad_actual], tabu, alpha, beta)
+        ciudad_actual,matriz_feromonas = seleccion_ciudad_colonia(fila_probabilidades,matriz_feromonas)
+        nuevo_tabu = ciudad_actual
+        tabu.append(nuevo_tabu)
+    return tabu,matriz_feromonas
 
 
 def sh(datos):
@@ -162,46 +206,145 @@ def sh(datos):
     beta = 2
     p = 0.1
     n = 280
-      # cambiar por la de la greedy con el coste y el vector
-    mejor_solucion=list([10000000000, np.arange(0,279)])
+    # cambiar por la de la greedy con el coste y el vector
+    mejor_solucion = list([10000000000, np.arange(0, 279)])
     # c_greedy=greedy
     # usar la alpha y beta
     f, c = datos.shape
-    L = np.zeros((num_hormigas, f),dtype=int)
+    L = np.zeros((num_hormigas, f), dtype=int)
     matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromona_inicial=1)
     sol_greedy = greedy(matriz_distancia)
 
-    feromonas_inicial=1/(f*coste(matriz_distancia,sol_greedy))
+    feromonas_inicial = 1 / (f * coste(matriz_distancia, sol_greedy))
     matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromonas_inicial)
 
     iter = 0
     inicio = tim.time()
-    while (iter < (10000 * f)) and ((tim.time() - inicio) < 60):
+    while ((tim.time() - inicio) < 5):
         # print(tim.time()-inicio)
         for i in range(num_hormigas):
-            L[i][0] = random.randint(0, f-1)
+            L[i][0] = random.randint(0, f - 1)
             # L[i][0] = 0
         costes = []
-        inicio2=tim.time()
+        inicio2 = tim.time()
         for k in range(0, num_hormigas):
-            L[k]=generar_solucion_hormiga(L[k][0], matriz_heuristica, matriz_feromonas, matriz_distancia,alpha,beta)
+            L[k] = generar_solucion_hormiga(L[k][0], matriz_heuristica, matriz_feromonas, matriz_distancia, alpha, beta)
             costes.append(list([coste(matriz_distancia, L[k]), L[k]]))
 
         costes = sorted(costes, key=lambda x: (x[0]))
         mejor_actual = costes[0]
         matriz_aporte = calcular_matriz_aporte(costes, f)
-
         matriz_feromonas = evaporacion_feromonas(matriz_feromonas, p, matriz_aporte)
         print(mejor_solucion[0])
-        iter+=1
-        print(tim.time()-inicio," segundos")
-        print(iter," iteraciones")
+        iter += 1
+        print(tim.time() - inicio, " segundos")
+        print(iter, " iteraciones")
         if mejor_actual[0] < mejor_solucion[0]:
             mejor_solucion = mejor_actual
     return mejor_solucion
 
 
-print(sh(a280))
+def she(datos, num_elitistas):
+    np.random.seed(21334)
+    random.seed(2121334)
+    np.random.seed(732123)
+    random.seed(732123)
+    num_hormigas = 10
+    alpha = 1
+    beta = 2
+    p = 0.1
+    n = 280
+    # cambiar por la de la greedy con el coste y el vector
+    mejor_solucion = list([10000000000, np.arange(0, 279)])
+    # c_greedy=greedy
+    # usar la alpha y beta
+    f, c = datos.shape
+    L = np.zeros((num_hormigas, f), dtype=int)
+    matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromona_inicial=1)
+    sol_greedy = greedy(matriz_distancia)
+
+    feromonas_inicial = 1 / (f * coste(matriz_distancia, sol_greedy))
+    matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromonas_inicial)
+
+    iter = 0
+    inicio = tim.time()
+    while ((tim.time() - inicio) < 60 * 15):
+        # print(tim.time()-inicio)
+        for i in range(num_hormigas):
+            L[i][0] = random.randint(0, f - 1)
+            # L[i][0] = 0
+        costes = []
+        inicio2 = tim.time()
+        for k in range(0, num_hormigas):
+            L[k] = generar_solucion_hormiga(L[k][0], matriz_heuristica, matriz_feromonas, matriz_distancia, alpha, beta)
+            costes.append(list([coste(matriz_distancia, L[k]), L[k]]))
+
+        costes = sorted(costes, key=lambda x: (x[0]))
+        mejor_actual = costes[0]
+
+        matriz_aporte = calcular_matriz_aporte_elitista(costes, f, mejor_actual[1], mejor_actual[0], num_elitistas)
+
+        matriz_feromonas = evaporacion_feromonas(matriz_feromonas, p, matriz_aporte)
+        print(mejor_solucion[0])
+        iter += 1
+        print(tim.time() - inicio, " segundos")
+        print(iter, " iteraciones")
+        if mejor_actual[0] < mejor_solucion[0]:
+            mejor_solucion = mejor_actual
+    return mejor_solucion
+
+
+def sch(datos):
+    np.random.seed(21334)
+    random.seed(2121334)
+    np.random.seed(732123)
+    random.seed(732123)
+    num_hormigas = 10
+    alpha = 1
+    beta = 2
+    p = 0.1
+    n = 280
+    # cambiar por la de la greedy con el coste y el vector
+    mejor_solucion = list([10000000000, np.arange(0, 279)])
+    # c_greedy=greedy
+    # usar la alpha y beta
+    f, c = datos.shape
+    L = np.zeros((num_hormigas, f), dtype=int)
+    matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromona_inicial=1)
+    sol_greedy = greedy(matriz_distancia)
+
+    feromonas_inicial = 1 / (f * coste(matriz_distancia, sol_greedy))
+    matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromonas_inicial)
+
+    iter = 0
+    inicio = tim.time()
+    while ((tim.time() - inicio) < 5):
+        # print(tim.time()-inicio)
+        for i in range(num_hormigas):
+            L[i][0] = random.randint(0, f - 1)
+            # L[i][0] = 0
+        costes = []
+        inicio2 = tim.time()
+        for k in range(0, num_hormigas):
+            L[k],matriz_feromonas = generar_solucion_hormiga_colonia(L[k][0], matriz_heuristica, matriz_feromonas, matriz_distancia, alpha, beta)
+            costes.append(list([coste(matriz_distancia, L[k]), L[k]]))
+
+            costes = sorted(costes, key=lambda x: (x[0]))
+            mejor_actual = costes[0]
+            matriz_aporte = calcular_matriz_aporte_global(costes[0][1], 1 / costes[0][0], f)
+
+            matriz_feromonas = evaporacion_feromonas(matriz_feromonas, p, matriz_aporte)
+            print(mejor_solucion[0])
+            iter += 1
+            print(tim.time() - inicio, " segundos")
+            print(iter, " iteraciones")
+            if mejor_actual[0] < mejor_solucion[0]:
+                mejor_solucion = mejor_actual
+    return mejor_solucion
+
+
+# print(sh(a280))
+print(she(a280, 15))
 # tabu=[1,2,3]
 # print(seleccion_ciudad([-1,-1,-1,0.475,0.3,0.225]))
 # matriz_heuristica, matriz_feromonas, matriz_distancias=inicializar_matrices(ch130,10)
