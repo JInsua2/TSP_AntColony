@@ -94,24 +94,6 @@ def seleccion_ciudad(fila_probabilidades):
     return posicion
 
 
-# def seleccion_ciudad_colonia(fila_probabilidades,matriz_feromonas):
-#     valor = random.uniform(0.0, 1.0)
-#     # valor=0.673
-#     acumulado = 0
-#     posicion = -5
-#     # print("len de la fila prob",len(fila_probabilidades))
-#     for pos, prob in enumerate(fila_probabilidades):
-#
-#         if prob > 0:
-#             acumulado += prob
-#             if pos == 280:
-#                 print("la longitud cuando da fallo es ", len(fila_probabilidades), " ----- ", pos)
-#             if acumulado > valor:
-#                 posicion = pos
-#                 fila_probabilidades[pos] = -1
-#                 break
-#     return posicion
-
 def seleccion_ciudad_colonia(fila_probabilidades, matriz_feromonas):
     max_inicial = fila_probabilidades[0]
     posicion = 0
@@ -282,6 +264,7 @@ def sh(datos):
     random.seed(21334)
     # np.random.seed(732123)
     # random.seed(732123)
+
     num_hormigas = 10
     alpha = 1
     beta = 2
@@ -304,7 +287,7 @@ def sh(datos):
 
     iter = 0
     inicio = tim.time()
-    while ((tim.time() - inicio) < 60*5):
+    while ((tim.time() - inicio) < 60 * 5):
         # print(tim.time()-inicio)
         for i in range(num_hormigas):
             L[i][0] = random.randint(0, f - 1)
@@ -329,18 +312,18 @@ def sh(datos):
         y.append(mejor_solucion[0])
         iter += 1
 
-    plt.plot(x, y, linewidth=2.5, color='#A09BE7')
-    plt.title('Evolucion coste en sh ')
-    plt.show()
+    # plt.plot(x, y, linewidth=2.5, color='#A09BE7')
+    # plt.title('Evolucion coste en sh ')
+    # plt.show()
     return mejor_solucion, iteracion_final
 
 
 def she(datos, num_elitistas):
-    # np.random.seed(21334)
-    # random.seed(21334)
+    np.random.seed(21334)
+    random.seed(21334)
+    # np.random.seed(732123)
+    # random.seed(732123)
 
-    np.random.seed(732123)
-    random.seed(732123)
     num_hormigas = 10
     alpha = 1
     beta = 2
@@ -360,7 +343,7 @@ def she(datos, num_elitistas):
 
     iter = 0
     inicio = tim.time()
-    while ((tim.time() - inicio) < 60 * 5):
+    while ((tim.time() - inicio) < 60 * 0.1):
         # print(tim.time()-inicio)
         for i in range(num_hormigas):
             L[i][0] = random.randint(0, f - 1)
@@ -386,9 +369,9 @@ def she(datos, num_elitistas):
         x.append(iter)
         y.append(mejor_solucion[0])
         iter += 1
-    plt.plot(x, y, linewidth=2.5, color='#1EB8AE')
-    plt.title('Evolucion coste en SHE ')
-    plt.show()
+    # plt.plot(x, y, linewidth=2.5, color='#1EB8AE')
+    # plt.title('Evolucion coste en SHE ')
+    # plt.show()
     return mejor_solucion, iteracion_final
 
 
@@ -397,6 +380,7 @@ def sch(datos):
     random.seed(21334)
     # np.random.seed(732123)
     # random.seed(732123)
+
     num_hormigas = 10
     alpha = 1
     beta = 2
@@ -416,6 +400,7 @@ def sch(datos):
     sol_greedy = greedy(matriz_distancia)
 
     feromonas_inicial = 1 / (f * coste(matriz_distancia, sol_greedy))
+
     matriz_heuristica, matriz_feromonas, matriz_distancia = inicializar_matrices(datos, feromonas_inicial)
 
     iter = 0
@@ -447,9 +432,9 @@ def sch(datos):
             y.append(mejor_solucion[0])
             iter += 1
             print(tim.time() - inicio, " segundos")
-    plt.plot(x, y, linewidth=2.5, color='#1EB8AE')
-    plt.title('Evolucion coste en SCH ')
-    plt.show()
+    # plt.plot(x, y, linewidth=2.5, color='#E5D352')
+    # plt.title('Evolucion coste en SCH ')
+    # plt.show()
     return mejor_solucion, iteracion_final
 
 
@@ -466,34 +451,23 @@ def dibujar_camino_vs_optimo(puntos, camino, camino_optimo):
         c_optimo += -1
         x_optimo.append(puntos[c_optimo][0])
         y_optimo.append(puntos[c_optimo][1])
-    plt.plot(x, y, linewidth=2.5, color='#1EB8AE')
+    plt.plot(x, y, linewidth=2.5, color='#E5D352')
     plt.title('Camino SCH')
     plt.show()
     plt.plot(x_optimo, y_optimo, linewidth=2.5, color='black')
     plt.title('Camino Optimo')
     plt.show()
-    plt.plot(x, y, linewidth=2.5, color='#1EB8AE', label='camino SCH')
+    plt.plot(x, y, linewidth=2.5, color='#E5D352', label='camino')
     plt.plot(x_optimo, y_optimo, linewidth=2.5, color='#59594A', label='camino optimo')
     plt.title('Comparacion con el optimo')
     plt.legend()
     plt.show()
 
-parametro_datos=ch130
-camino, iteracion_final = sh(parametro_datos)
+
+parametro_datos = ch130
+camino, iteracion_final = she(parametro_datos, 10)
 print("-----------------------------------\n")
 print("coste de la solucion ", camino[0])
 print("numero de evaluaciones ", iteracion_final * 10)
 print("iteracion de la ultima mejora ", iteracion_final)
 dibujar_camino_vs_optimo(parametro_datos, camino[1], camino_optimo130)
-
-#
-# x=[1,2,3]
-# y=[1,1,3]
-# y2=[2,1,2]
-# y3=[3,2,1]
-#
-# plt.plot(x,y,linewidth=2.5,color='#A09BE7')
-# plt.plot(x,y2,linewidth=2.5,color='#1EB8AE')
-# plt.plot(x,y3,linewidth=2.5,color='#E5D352')
-
-# plt.show()
